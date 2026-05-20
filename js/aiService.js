@@ -1,4 +1,4 @@
-const API_URL = '/api/gemini';
+const API_URL = 'https://ai-resume-backend-55hy.onrender.com/api/gemini';
 
 async function callGeminiAPI(prompt, temperature = 0.7) {
     try {
@@ -29,7 +29,7 @@ async function callGeminiAPI(prompt, temperature = 0.7) {
         return null;
     } catch (error) {
         console.error("API Fetch Error:", error);
-        alert("Could not connect to the backend server. Make sure you run 'node server.js' and open http://localhost:3000");
+        alert("Backend connection failed. Please try again.");
         return null;
     }
 }

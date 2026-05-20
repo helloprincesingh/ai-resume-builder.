@@ -2,7 +2,7 @@ require('dotenv').config();
 const apiKey = process.env.GEMINI_API_KEY;
 
 async function testGrammar() {
-    const model = 'gemini-1.5-flash';
+    const model = 'gemini-2.0-flash-lite';
     
     console.log("Testing with API Key:", apiKey ? "FOUND" : "MISSING");
     
@@ -17,9 +17,9 @@ async function testGrammar() {
                 })
             }
         );
-        const data = await response.json();
+        const text = await response.text();
         console.log("Response Status:", response.status);
-        console.log("Response Data:", JSON.stringify(data, null, 2));
+        console.log("Response Text:", text);
     } catch (e) {
         console.error("Test failed:", e);
     }

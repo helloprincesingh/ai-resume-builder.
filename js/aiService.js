@@ -12,7 +12,8 @@ async function callGeminiAPI(prompt, temperature = 0.7) {
         console.log("Gemini API Response:", data);
 
         if (!response.ok) {
-            alert(`API Error: ${data.error || "Unknown error"}`);
+            const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || "Unknown error";
+            alert(`API Error: ${errorMsg}`);
             return null;
         }
 

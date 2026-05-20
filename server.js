@@ -4,7 +4,9 @@ const cors = require('cors');
 // fetch is built-in in Node v18+ — no import needed
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const BASE_PORT = parseInt(process.env.PORT, 10) || 3000;
+let currentPort = BASE_PORT;
+const GEMINI_API_VERSION = 'v1beta';
 
 app.use(cors());
 app.use(express.json());
@@ -14,14 +16,14 @@ app.use(express.static('./'));
 app.post('/api/gemini', async (req, res) => {
     try {
         const { prompt, temperature = 0.7 } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
         if (!apiKey) {
             return res.status(401).json({ error: 'API Key not configured on server.' });
         }
 
         // Try these models in order (verified available names)
-        const models = ['gemini-2.0-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite', 'gemini-pro-latest', 'gemini-3-flash-preview'];
+        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-pro'];
         let lastError = null;
 
         for (const model of models) {
@@ -32,7 +34,7 @@ app.post('/api/gemini', async (req, res) => {
                 let attempts = 0;
                 while (attempts < 2) {
                     const response = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                        `https://generativelanguage.googleapis.com/${GEMINI_API_VERSION}/models/${model}:generateContent?key=${apiKey}`,
                         {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -43,7 +45,10 @@ app.post('/api/gemini', async (req, res) => {
                         }
                     );
 
-                    const data = await response.json();
+                    // Safely parse JSON — empty body from legacy endpoints causes an unhandled crash
+                    const rawText = await response.text();
+                    let data = {};
+                    try { data = rawText ? JSON.parse(rawText) : {}; } catch (_) { data = { error: { message: `Non-JSON response from model ${model}` } }; }
 
                     if (response.ok) {
                         console.log(`✅ Success with model: ${model}`);
@@ -57,7 +62,13 @@ app.post('/api/gemini', async (req, res) => {
                         continue; // Try again with the same model
                     }
 
-                    console.warn(`⚠️ Model ${model} failed: ${response.status} - ${data.error?.message || 'Unknown error'}`);
+                    if (response.status === 403) {
+                        console.warn(`🚫 Gemini permission denied for ${model}: ${data.error?.message || 'Forbidden'}`);
+                    } else if (response.status === 404) {
+                        console.warn(`⚠️ Gemini model not found or unsupported for ${model}: ${data.error?.message || 'Not found'}`);
+                    } else {
+                        console.warn(`⚠️ Model ${model} failed: ${response.status} - ${data.error?.message || 'Unknown error'}`);
+                    }
                     lastError = data;
                     break; // Try next model
                 }
@@ -76,4 +87,26 @@ app.post('/api/gemini', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+const startServer = () => {
+    const server = app.listen(currentPort, () => {
+        console.log(`✅ Server running on http://localhost:${currentPort}`);
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.warn(`⚠️ Port ${currentPort} is already in use.`);
+            currentPort += 1;
+            if (currentPort - BASE_PORT > 10) {
+                console.error('❌ Unable to find a free port after 10 attempts.');
+                process.exit(1);
+            }
+            console.log(`🔁 Trying next port: ${currentPort}`);
+            startServer();
+        } else {
+            console.error('🔥 Server error:', err);
+            process.exit(1);
+        }
+    });
+};
+
+startServer();

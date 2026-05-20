@@ -30,12 +30,7 @@ function optimizeContent(data) {
                 uniqueSentences.push(s.trim());
             }
         });
-        // Limit to 3-4 lines (approx 350-400 chars)
-        let finalSummary = uniqueSentences.join('. ');
-        if (finalSummary.length > 400) {
-            finalSummary = finalSummary.substring(0, 397) + '...';
-        }
-        optimized.summary = finalSummary;
+        optimized.summary = uniqueSentences.join('. ');
     }
 
     // 3. Limit Experience/Projects bullets and convert long paragraphs

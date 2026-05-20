@@ -61,8 +61,13 @@ function setupPersonalInputs() {
         const el = document.getElementById(`pi-${field}`);
         if (el) {
             el.addEventListener('input', (e) => {
-                if (el.checkValidity()) { state.personalInfo[field] = e.target.value; updateAndRender(); }
-                else if (el.nextElementSibling) el.nextElementSibling.textContent = el.validationMessage;
+                if (el.checkValidity()) {
+                    state.personalInfo[field] = e.target.value;
+                    updateAndRender();
+                    if (el.nextElementSibling) el.nextElementSibling.textContent = '';
+                } else {
+                    if (el.nextElementSibling) el.nextElementSibling.textContent = el.validationMessage;
+                }
             });
         }
     });

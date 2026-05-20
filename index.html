@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Builder</title>
+    <link rel="icon" href="data:,">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Roboto:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700&family=Montserrat:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/main.css?v=1.7">
+    <link rel="stylesheet" href="css/templates.css?v=1.7">
+
+    <!-- External Libraries for Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+</head>
+
+<body>
+    <div class="app-container show-edit">
+        <!-- Mobile Toggle Bar -->
+        <div class="mobile-toggle-bar">
+            <button id="mobile-edit-btn" class="mobile-toggle-item active">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Edit</span>
+            </button>
+            <button id="mobile-preview-btn" class="mobile-toggle-item">
+                <i class="fa-solid fa-eye"></i>
+                <span>Preview</span>
+            </button>
+        </div>
+
+        <!-- Icon Sidebar Nav -->
+        <nav class="side-nav">
+            <a href="#section-personal" class="nav-item active" title="Personal Info"><i
+                    class="fa-solid fa-user"></i></a>
+            <a href="#section-summary" class="nav-item" title="Summary"><i class="fa-solid fa-align-left"></i></a>
+            <a href="#section-experience" class="nav-item" title="Experience"><i class="fa-solid fa-briefcase"></i></a>
+            <a href="#section-education" class="nav-item" title="Education"><i
+                    class="fa-solid fa-graduation-cap"></i></a>
+            <a href="#section-skills" class="nav-item" title="Skills"><i class="fa-solid fa-lightbulb"></i></a>
+            <a href="#section-projects" class="nav-item" title="Projects"><i class="fa-solid fa-folder-open"></i></a>
+            <div class="nav-bottom">
+                <button id="theme-toggle" class="nav-item" title="Toggle Dark Mode"><i
+                        class="fa-solid fa-moon"></i></button>
+            </div>
+        </nav>
+
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-file-invoice" style="font-size: 1.4rem;"></i>
+                    <h1 style="margin: 0; font-size: 1.1rem; letter-spacing: 0.5px;">My Resumes</h1>
+                </div>
+                <div class="header-controls">
+                    <button id="clear-all-btn" class="btn btn-danger btn-sm" title="Clear All Data"><i
+                            class="fa-solid fa-trash-can"></i></button>
+                </div>
+            </header>
+
+            <div class="resume-manager-panel"
+                style="padding: 15px; background: rgba(67, 56, 202, 0.05); border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <select id="resume-drafts-selector"
+                        style="flex: 1; padding: 8px; font-size: 0.85rem; border-radius: 6px;">
+                        <option value="default">Default Resume</option>
+                    </select>
+                    <button id="delete-draft-btn" class="btn btn-danger btn-sm" style="padding: 0 10px;"
+                        title="Delete Current Draft"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="new-draft-name" placeholder="New draft name..."
+                        style="flex: 1; padding: 8px; font-size: 0.85rem; border-radius: 6px;">
+                    <button id="save-new-draft-btn" class="btn btn-primary btn-sm"
+                        style="padding: 0 12px; white-space: nowrap;"><i class="fa-solid fa-plus"></i> Save New</button>
+                </div>
+            </div>
+
+            <div class="global-controls">
+                <div class="control-group">
+                    <label for="template-selector">Resume Template</label>
+                    <select id="template-selector">
+                        <option value="template-modern">Modern</option>
+                        <option value="template-classic">Classic</option>
+                        <option value="template-minimal">Minimal</option>
+                        <option value="template-creative">Creative</option>
+                        <option value="template-corporate">Corporate</option>
+                        <option value="template-tech">Tech-focused</option>
+                        <option value="template-ats">ATS-Friendly (Clean)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="target-role">Target Job Role</label>
+                    <input type="text" id="target-role" placeholder="e.g., Software Engineer">
+                </div>
+
+                <div class="control-group" style="margin-bottom: 18px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 6px;">
+                        <label for="job-description"
+                            style="margin-bottom: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">Job
+                            Description <span id="try-sample-jd" style="text-transform:none; font-weight: normal; color: var(--primary); cursor: pointer; text-decoration: underline; margin-left: 5px; font-size: 0.7rem;">(Try Sample)</span></label>
+                        <div style="display: flex; gap: 5px;">
+                            <button type="button" id="generate-jd-btn" class="btn btn-secondary btn-sm" 
+                                style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 5px;"
+                                title="Generate requirements based on Job Title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Gen</button>
+                            <button type="button" id="analyze-jd-btn" class="btn btn-ai btn-sm"
+                                style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 5px; transition: transform 0.2s, box-shadow 0.2s;"
+                                onmouseover="this.style.transform='scale(1.05)'"
+                                onmouseout="this.style.transform='scale(1)'"><i
+                                    class="fa-solid fa-magnifying-glass-chart"></i> Analyze Match</button>
+                        </div>
+                    </div>
+                    <textarea id="job-description" rows="3"
+                        placeholder="Paste target job description here to optimize your resume..."
+                        style="width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 0.85rem; transition: border-color 0.2s; background: var(--bg-color);"></textarea>
+                </div>
+
+                <div class="ats-score-container">
+                    <div class="ats-header"
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600;">
+                        <label>Est. ATS Score</label>
+                        <span id="ats-score-value" class="ats-badge">0%</span>
+                    </div>
+                    <div class="ats-progress-bar">
+                        <div id="ats-progress" class="ats-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="export-controls">
+                    <button id="download-pdf" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                    <button id="download-docx" class="btn btn-secondary"><i class="fa-solid fa-file-word"></i>
+                        DOCX</button>
+                </div>
+                <button id="generate-cover-letter-btn" class="btn btn-ai" style="margin-top: 10px;"><i
+                        class="fa-solid fa-envelope-open-text"></i> Generate AI Cover Letter</button>
+            </div>
+
+            <form id="resume-form" class="form-sections" novalidate>
+                <!-- Personal Info -->
+                <section class="form-section open" id="section-personal">
+                    <h2 class="section-title">Personal Information <i class="fa-solid fa-chevron-down"></i></h2>
+                    <div class="section-content" style="display: flex;">
+                        <div class="photo-upload-group">
+                            <label class="photo-label" for="pi-photo">Profile Photo</label>
+                            <input type="file" id="pi-photo" accept="image/*" class="file-input">
+                            <button type="button" id="remove-photo-btn" class="btn btn-danger btn-sm hidden"
+                                style="margin-top: 5px;">Remove Photo</button>
+                        </div>
+
+                        <div class="input-group">
+                            <input type="text" id="pi-name" placeholder="Full Name" required>
+                            <span class="error-msg"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="pi-title" placeholder="Professional Title">
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="pi-email" placeholder="Email Address">
+                            <span class="error-msg"></span>
+                        </div>
+                        <div class="input-group">
+                            <input type="tel" id="pi-phone" placeholder="Phone Number">
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="pi-location" placeholder="City, Country">
+                        </div>
+                        <div class="input-group">
+                            <input type="url" id="pi-linkedin" placeholder="LinkedIn URL">
+                        </div>
+                        <div class="input-group">
+                            <input type="url" id="pi-github" placeholder="GitHub/Portfolio URL">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Professional Summary -->
+                <section class="form-section" id="section-summary">
+                    <h2 class="section-title">Professional Summary <i class="fa-solid fa-chevron-down"></i></h2>
+                    <div class="section-content">
+                        <div class="ai-controls">
+                            <button type="button" class="btn btn-ai" id="generate-summary-btn"><i
+                                    class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Summary</button>
+                        </div>
+                        <div class="textarea-container">
+                            <textarea id="summary-text" rows="5"
+                                placeholder="Write a brief professional summary..."></textarea>
+                            <button type="button" class="btn-improve" data-target="summary-text" title="Enhance Text"><i
+                                    class="fa-solid fa-bolt"></i></button>
+                            <ul class="suggestions-dropdown" id="summary-suggestions"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Work Experience -->
+                <section class="form-section" id="section-experience">
+                    <h2 class="section-title">Work Experience <i class="fa-solid fa-chevron-down"></i></h2>
+                    <div class="section-content">
+                        <div id="experience-list" class="sortable-list"></div>
+                        <button type="button" class="btn btn-secondary add-btn" id="add-experience-btn"><i
+                                class="fa-solid fa-plus"></i> Add Experience</button>
+                    </div>
+                </section>
+
+                <!-- Education -->
+                <section class="form-section" id="section-education">
+                    <h2 class="section-title">Education <i class="fa-solid fa-chevron-down"></i></h2>
+                    <div class="section-content">
+                        <div id="education-list" class="sortable-list"></div>
+                        <button type="button" class="btn btn-secondary add-btn" id="add-education-btn"><i
+                                class="fa-solid fa-plus"></i> Add Education</button>
+                    </div>
+                </section>
+
+                <!-- Skills -->
+                <section class="form-section" id="section-skills">
+                    <h2 class="section-title">Skills <i class="fa-solid fa-chevron-down"></i></h2>
+                    <div class="section-content">
+                        <button type="button" class="btn btn-ai btn-sm" id="enhance-skills-btn"
+                            style="margin-bottom:10px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Suggest Skills
+                            via AI</button>
+                        <div class="skills-input-container">
+                            <input type="text" id="skill-input" placeholder="Type a skill and press Enter">
+                        </div>
+                        <div id="skills-tags-container" class="skills-tags"></div>
+                    </div>
+                </section>
+
+                <!-- Projects -->
+                <section class="form-section" id="section-projects">
+                    <h2 class="section-title">Projects <i class="fa-solid fa-chevron-down"></i></h2>
+                    <div class="section-content">
+                        <div id="projects-list" class="sortable-list"></div>
+                        <button type="button" class="btn btn-secondary add-btn" id="add-project-btn"><i
+                                class="fa-solid fa-plus"></i> Add Project</button>
+                    </div>
+                </section>
+            </form>
+        </aside>
+
+        <!-- Preview Area -->
+        <main class="preview-area">
+            <div id="resume-preview-container">
+                <div id="resume-preview" class="resume-preview template-modern">
+                    <!-- Content will be generated via JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI Loading Overlay -->
+    <div id="ai-loading" class="ai-loading hidden">
+        <div class="loader">
+            <i class="fa-solid fa-wand-magic-sparkles fa-spin"></i>
+            <p>AI is processing...</p>
+        </div>
+    </div>
+
+    <!-- AI Cover Letter Modal -->
+    <div id="cover-letter-modal" class="grammar-modal">
+        <div class="grammar-modal-backdrop"></div>
+        <div class="grammar-modal-box">
+            <div class="grammar-modal-header">
+                <span><i class="fa-solid fa-envelope-open-text"></i> AI Tailored Cover Letter</span>
+                <button class="grammar-modal-close" id="cl-modal-close">&times;</button>
+            </div>
+            <div class="grammar-modal-body">
+                <textarea id="cover-letter-text" rows="15"
+                    style="width:100%; height: 350px; border:none; background: transparent; color: inherit; font-family: inherit; font-size: 0.95rem; line-height: 1.6; resize: none;"></textarea>
+            </div>
+            <div class="grammar-modal-footer">
+                <button class="btn btn-primary" id="cl-download-docx"><i class="fa-solid fa-file-word"></i> Download
+                    .docx</button>
+                <button class="btn btn-secondary" id="cl-copy-btn"><i class="fa-solid fa-copy"></i> Copy Text</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts loaded in dependency order (no ES modules - works with file:// and http://) -->
+    <script src="js/storageService.js?v=1.7"></script>
+    <script src="js/aiService.js?v=1.7"></script>
+    <script src="js/previewRenderer.js?v=1.7"></script>
+    <script src="js/templateManager.js?v=1.7"></script>
+    <script src="js/formHandler.js?v=1.7"></script>
+    <script src="js/main.js?v=1.7"></script>
+</body>
+
+</html>

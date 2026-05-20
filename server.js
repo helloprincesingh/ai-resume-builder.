@@ -23,7 +23,7 @@ app.post('/api/gemini', async (req, res) => {
         }
 
         // Try these models in order (verified available names)
-        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-pro'];
+        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'];
         let lastError = null;
 
         for (const model of models) {

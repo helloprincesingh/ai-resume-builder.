@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 const BASE_PORT = parseInt(process.env.PORT, 10) || 3000;
 let currentPort = BASE_PORT;
-const GEMINI_API_VERSION = 'v1beta';
+const GEMINI_API_VERSION = 'v1';
 
 app.use(cors());
 app.use(express.json());
@@ -23,7 +23,7 @@ app.post('/api/gemini', async (req, res) => {
         }
 
         // Try these models in order (verified available names)
-        const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'];
+        const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
         let lastError = null;
 
         for (const model of models) {

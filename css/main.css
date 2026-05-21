@@ -894,8 +894,22 @@ input:invalid+.error-msg {
 @media (max-width: 900px) {
     body {
         overflow: hidden;
+        overflow-x: hidden;
         height: 100vh;
         height: 100dvh;
+    }
+
+    .control-group > div[style*="justify-content"] {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .skills-tags {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-top: 10px !important;
     }
 
     .app-container {
@@ -974,6 +988,16 @@ input:invalid+.error-msg {
 
     .btn {
         width: 100%;
+    }
+
+    .btn-sm {
+        width: auto !important;
+        flex: none !important;
+    }
+
+    .grammar-modal-footer {
+        flex-direction: column !important;
+        gap: 8px !important;
     }
 
     .sidebar-header h1 {

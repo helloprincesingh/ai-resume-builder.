@@ -20,6 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setupExport();
     setupGrammarFix();
     setupMobileToggle();
+
+    // Mobile theme toggle button listener and setup
+    const mobileThemeBtn = document.getElementById('mobile-theme-btn');
+    if (mobileThemeBtn) {
+        mobileThemeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            state.theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            saveData();
+            updateMobileThemeUI();
+        });
+    }
+    updateMobileThemeUI();
+    initPreviewScaleObserver();
 });
 
 
@@ -396,4 +409,26 @@ function generateDocx() {
         const a = document.createElement('a'); a.href = url; a.download = `${state.personalInfo.name || 'resume'}.docx`; a.click();
         window.URL.revokeObjectURL(url);
     });
+}
+
+function updateMobileThemeUI() {
+    const isDark = document.body.classList.contains('dark-mode');
+    const mobileIcon = document.querySelector('#mobile-theme-btn i');
+    const mobileSpan = document.querySelector('#mobile-theme-btn span');
+    if (mobileIcon) {
+        mobileIcon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        if (mobileSpan) mobileSpan.textContent = isDark ? 'Light' : 'Dark';
+    }
+}
+
+function initPreviewScaleObserver() {
+    const area = document.querySelector('.preview-area');
+    if (!area) return;
+    
+    const observer = new ResizeObserver(() => {
+        if (typeof updatePreviewScale === 'function') {
+            updatePreviewScale();
+        }
+    });
+    observer.observe(area);
 }

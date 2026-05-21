@@ -124,7 +124,13 @@
 .template-ats { 
     font-family: 'Inter', Arial, sans-serif; 
     color: #000; 
-    line-height: 1.3; 
+    line-height: 1.3;
+    max-width: 100%;
+    overflow: hidden;
+}
+.template-ats * {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 .template-ats .res-photo-container { display: none; }
 
@@ -228,11 +234,16 @@
 .template-ats .res-skills { 
     display: block !important; 
     font-size: 10pt; 
-    line-height: 1.5;
+    line-height: 1.8;
     text-align: left;
     width: 100%;
+    max-width: 100%;
     grid-template-columns: none !important;
     gap: 0 !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    overflow: hidden;
 }
 .template-ats .res-skill-tag { 
     background: none !important; 
@@ -243,9 +254,11 @@
     display: inline !important;
     border-radius: 0 !important;
     text-align: left !important;
+    white-space: normal;
+    word-break: break-word;
 }
 .template-ats .res-skill-tag:not(:last-child)::after { 
-    content: ",  "; 
+    content: ", "; 
 }
 
 /* Page-break control */

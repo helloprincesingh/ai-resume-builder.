@@ -102,7 +102,7 @@ function renderPreview() {
                 ${atsContactsHTML}
             </div>
             ${summary ? `<div class="res-section"><div class="res-section-title">Professional Summary</div><div class="res-summary">${summary}</div></div>` : ''}
-            ${skills.length > 0 ? `<div class="res-section"><div class="res-section-title">Skills</div><div class="res-skills">${skills.map(s => `<span class="res-skill-tag">${s}</span>`).join('')}</div></div>` : ''}
+            ${skills.length > 0 ? `<div class="res-section"><div class="res-section-title">Skills</div><p class="res-ats-skills-text">${skills.join(', ')}</p></div>` : ''}
             ${experience.length > 0 ? `<div class="res-section"><div class="res-section-title">Professional Experience</div>${experience.map(exp => `
                 <div class="res-item">
                     <div class="res-item-header">

@@ -1,4 +1,4 @@
-const API_URL = 'https://ai-resume-backend-55hy.onrender.com/api/gemini';
+const API_URL = '/api/gemini';
 
 async function callGeminiAPI(prompt, temperature = 0.7) {
     try {
@@ -12,9 +12,14 @@ async function callGeminiAPI(prompt, temperature = 0.7) {
         console.log("Gemini API Response:", data);
 
         if (!response.ok) {
-            const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || "Unknown error";
-            alert(`API Error: ${errorMsg}`);
-            return null;
+            const errorMsg =
+                data.error?.message ||
+                (typeof data.error === 'string' ? data.error : null) ||
+                "AI service temporarily unavailable";
+
+            console.warn("Gemini API Warning:", errorMsg);
+
+            return `⚠️ AI service is temporarily busy. Please try again in a few seconds.`;
         }
 
         // Gemini response parsing
@@ -29,14 +34,21 @@ async function callGeminiAPI(prompt, temperature = 0.7) {
         return null;
     } catch (error) {
         console.error("API Fetch Error:", error);
-        alert("Backend connection failed. Please try again.");
+        console.warn("Backend connection failed.");
+        return "⚠️ Backend connection temporarily failed. Please try again.";
         return null;
     }
 }
 
 // 🔹 Advanced AI Resume Assistant - Integrated Improvement Engine
 async function improveContent(userText, section = 'General', targetRole = '', jobDescription = '') {
+
+    if (!userText || userText.trim().length < 5) {
+        return "Please enter more project details before using AI improvement.";
+    }
+
     const prompt = `
+    ...
 You are an advanced AI resume assistant with expertise in career consulting, ATS optimization, and professional writing.
 Your tasks:
 1. Generate tailored suggestions for each resume section (Summary, Skills, Projects, Experience, Education) based on user input and target job role.
@@ -49,9 +61,14 @@ Your tasks:
 8. Generate a personalized cover letter draft based on the resume and target role.
 9. Offer template‑friendly outputs (clean ATS, modern, creative, minimalist) so the text can fit multiple resume designs.
 10. Maintain version consistency: ensure edits can be tracked and compared across drafts.
-
+11. Automatically fix grammar mistakes, spelling mistakes, punctuation, capitalization, and sentence structure.
+12. Convert informal or broken English into polished professional English.
+13. Example:
+Input: "i am a enginneer"
+Output: "I am an engineer."
+14. Always return grammatically corrected text even if the user input is very short.
 CONTEXT: The user is currently editing the "${section}" section.
-
+If the input contains only grammar mistakes or short text, prioritize correction over expansion.
 RESPONSE FORMAT (Strictly use these headers so the UI can parse your response):
 ### 💎 Improved Version
 (The optimized, grammatically perfect, and impactful version tailored to the role. Use bullet points if appropriate.)

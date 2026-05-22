@@ -261,6 +261,19 @@
     content: ", "; 
 }
 
+/* Plain-text skills paragraph for ATS template */
+.template-ats .res-ats-skills-text {
+    font-size: 10pt;
+    line-height: 1.6;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    width: 100%;
+}
+
 /* Page-break control */
 .template-ats .res-section { page-break-inside: avoid; }
 .template-ats .res-item { page-break-inside: avoid; }

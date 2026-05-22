@@ -23,7 +23,7 @@ app.post('/api/gemini', async (req, res) => {
         }
 
         // Try these models in order (verified available names)
-        const models = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+        const models = ['gemini-2.5-flash', 'gemini-flash-latest'];
         let lastError = null;
 
         for (const model of models) {
@@ -34,7 +34,7 @@ app.post('/api/gemini', async (req, res) => {
                 let attempts = 0;
                 while (attempts < 2) {
                     const response = await fetch(
-                        `https://generativelanguage.googleapis.com/${GEMINI_API_VERSION}/models/${model}:generateContent?key=${apiKey}`,
+                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
                         {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -80,7 +80,19 @@ app.post('/api/gemini', async (req, res) => {
 
         // If all models failed
         const status = lastError?.error?.code || 500;
-        res.status(status).json(lastError || { error: 'All models failed to respond.' });
+        return res.json({
+    candidates: [
+        {
+            content: {
+                parts: [
+                    {
+                        text: "AI service is temporarily busy. Please try again in a few seconds."
+                    }
+                ]
+            }
+        }
+    ]
+});
     } catch (error) {
         console.error('🔥 Global Server Error:', error);
         res.status(500).json({ error: error.message });

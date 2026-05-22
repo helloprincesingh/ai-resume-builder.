@@ -1,12 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-// fetch is built-in in Node v18+ — no import needed
 
 const app = express();
 const BASE_PORT = parseInt(process.env.PORT, 10) || 3000;
 let currentPort = BASE_PORT;
-const GEMINI_API_VERSION = 'v1';
 
 app.use(cors());
 app.use(express.json());
@@ -22,17 +20,15 @@ app.post('/api/gemini', async (req, res) => {
             return res.status(401).json({ error: 'API Key not configured on server.' });
         }
 
-        // Try these models in order (verified available names)
+        // Stable models
         const models = ['gemini-2.5-flash', 'gemini-flash-latest'];
         let lastError = null;
 
         for (const model of models) {
             try {
                 console.log(`🚀 Attempting Gemini request with model: ${model}`);
-                
-                // Retry logic for 429 within the same model
                 let attempts = 0;
-                while (attempts < 2) {
+                while (attempts < 4) {
                     const response = await fetch(
                         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
                         {
@@ -40,37 +36,39 @@ app.post('/api/gemini', async (req, res) => {
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
                                 contents: [{ parts: [{ text: prompt }] }],
-                                generationConfig: { temperature }
+                                generationConfig: {
+                                    temperature,
+                                    maxOutputTokens: 2048
+                                }
                             })
                         }
                     );
 
-                    // Safely parse JSON — empty body from legacy endpoints causes an unhandled crash
                     const rawText = await response.text();
                     let data = {};
-                    try { data = rawText ? JSON.parse(rawText) : {}; } catch (_) { data = { error: { message: `Non-JSON response from model ${model}` } }; }
+                    try {
+                        data = rawText ? JSON.parse(rawText) : {};
+                    } catch (e) {
+                        data = { error: { message: `Non-JSON response from ${model}` } };
+                    }
 
+                    // SUCCESS
                     if (response.ok) {
                         console.log(`✅ Success with model: ${model}`);
                         return res.json(data);
                     }
 
+                    // RATE LIMIT
                     if (response.status === 429) {
                         attempts++;
-                        console.warn(`🛑 Rate limit exceeded (429) for ${model}. Retrying in 2s... (Attempt ${attempts}/2)`);
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        continue; // Try again with the same model
+                        console.warn(`🛑 Rate limit exceeded for ${model}. Retrying... (${attempts}/4)`);
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        continue;
                     }
 
-                    if (response.status === 403) {
-                        console.warn(`🚫 Gemini permission denied for ${model}: ${data.error?.message || 'Forbidden'}`);
-                    } else if (response.status === 404) {
-                        console.warn(`⚠️ Gemini model not found or unsupported for ${model}: ${data.error?.message || 'Not found'}`);
-                    } else {
-                        console.warn(`⚠️ Model ${model} failed: ${response.status} - ${data.error?.message || 'Unknown error'}`);
-                    }
+                    console.warn(`⚠️ ${model} failed: ${response.status}`);
                     lastError = data;
-                    break; // Try next model
+                    break;
                 }
             } catch (err) {
                 console.error(`🔥 Fetch error with model ${model}:`, err.message);
@@ -78,24 +76,36 @@ app.post('/api/gemini', async (req, res) => {
             }
         }
 
-        // If all models failed
-        const status = lastError?.error?.code || 500;
+        // Fallback response instead of crashing
         return res.json({
-    candidates: [
-        {
-            content: {
-                parts: [
-                    {
-                        text: "AI service is temporarily busy. Please try again in a few seconds."
+            candidates: [
+                {
+                    content: {
+                        parts: [
+                            {
+                                text: "AI service is temporarily busy. Please try again in a few seconds."
+                            }
+                        ]
                     }
-                ]
-            }
-        }
-    ]
-});
+                }
+            ]
+        });
+
     } catch (error) {
         console.error('🔥 Global Server Error:', error);
-        res.status(500).json({ error: error.message });
+        return res.json({
+            candidates: [
+                {
+                    content: {
+                        parts: [
+                            {
+                                text: "Temporary AI server issue. Please try again."
+                            }
+                        ]
+                    }
+                }
+            ]
+        });
     }
 });
 

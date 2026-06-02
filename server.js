@@ -3,12 +3,16 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
+const path = require('path');
 const BASE_PORT = parseInt(process.env.PORT, 10) || 3000;
 let currentPort = BASE_PORT;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('./'));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Gemini API Proxy Endpoint
 app.post('/api/gemini', async (req, res) => {

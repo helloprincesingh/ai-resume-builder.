@@ -100,6 +100,24 @@
                     </select>
                 </div>
 
+                <div class="control-group" style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label for="max-pages-selector">Max Pages</label>
+                        <select id="max-pages-selector">
+                            <option value="1">1 Page</option>
+                            <option value="2">2 Pages</option>
+                            <option value="3">3 Pages</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1.5;">
+                        <label for="overflow-strategy-selector">Overflow Handling</label>
+                        <select id="overflow-strategy-selector">
+                            <option value="shrink">✨ Auto-Shrink</option>
+                            <option value="flow">📄 Move to Next Page</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="control-group">
                     <label for="target-role">Target Job Role</label>
                     <input type="text" id="target-role" placeholder="e.g., Software Engineer">
@@ -254,6 +272,19 @@
             <div id="resume-preview-container">
                 <div id="resume-preview" class="resume-preview template-modern">
                     <!-- Content will be generated via JS -->
+                </div>
+            </div>
+            
+            <!-- Floating Overflow Warning Card -->
+            <div id="overflow-warning-card" class="overflow-warning-card hidden">
+                <div class="warning-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="warning-details">
+                    <div class="warning-title">Content Overflows Page Limit!</div>
+                    <div class="warning-desc">Your resume exceeds the chosen limit of <span id="warning-limit-num">1</span> page(s).</div>
+                </div>
+                <div class="warning-actions">
+                    <button type="button" id="warning-action-shrink" class="btn btn-ai btn-sm"><i class="fa-solid fa-compress"></i> Auto-Shrink</button>
+                    <button type="button" id="warning-action-flow" class="btn btn-secondary btn-sm"><i class="fa-solid fa-file-circle-plus"></i> Add Page</button>
                 </div>
             </div>
         </main>

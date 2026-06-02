@@ -64,6 +64,25 @@ function optimizeContent(data) {
     return optimized;
 }
 
+function parseMarkdown(text) {
+    if (!text) return '';
+    
+    let clean = text;
+    
+    // Replace markdown bullet points that are preceded by space/newline/start and followed by space
+    clean = clean.replace(/(?:^|\s|[\n])[\*\-\•\u2022]\s+/g, ' ');
+    
+    // Replace bold "**text**" or "__text__"
+    clean = clean.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    clean = clean.replace(/__(.*?)__/g, '<strong>$1</strong>');
+    
+    // Replace italic "*text*" or "_text_"
+    clean = clean.replace(/\*([^\*\s][^\*]*?[^\*\s]|[^\*\s])\*/g, '<em>$1</em>');
+    clean = clean.replace(/_([^\_\s][^\_]*?[^\_\s]|[^\_\s])_/g, '<em>$1</em>');
+    
+    return clean;
+}
+
 function renderPreview() {
     const previewContainer = document.getElementById('resume-preview');
     if (!previewContainer) return;
@@ -80,10 +99,18 @@ function renderPreview() {
     const contactsHTML = contacts.length > 0 ? `<div class="res-contact">${contacts.join('')}</div>` : '';
     const photoHTML = personalInfo.photo ? `<div class="res-photo-container"><img src="${personalInfo.photo}" class="res-photo"></div>` : '';
 
+    const parsedSummary = parseMarkdown(summary);
+
     const skillsHTML = skills.length > 0 ? `<div class="res-section"><div class="res-section-title">Skills</div><div class="res-skills">${skills.map(s => `<span class="res-skill-tag">${s}</span>`).join('')}</div></div>` : '';
-    const expHTML = experience.length > 0 ? `<div class="res-section"><div class="res-section-title">Experience</div>${experience.map(exp => `<div class="res-item"><div class="res-item-header"><div><div class="res-item-title">${exp.title || 'Job Title'}</div><div class="res-item-subtitle">${exp.company || 'Company'}</div></div><div class="res-item-date">${exp.date || ''}</div></div><div class="res-list">${exp.description ? exp.description.split('\n').map(l => l.trim() ? `• ${l}<br>` : ``).join('') : ''}</div></div>`).join('')}</div>` : '';
+    const expHTML = experience.length > 0 ? `<div class="res-section"><div class="res-section-title">Experience</div>${experience.map(exp => `<div class="res-item"><div class="res-item-header"><div><div class="res-item-title">${exp.title || 'Job Title'}</div><div class="res-item-subtitle">${exp.company || 'Company'}</div></div><div class="res-item-date">${exp.date || ''}</div></div><div class="res-list">${exp.description ? exp.description.split('\n').map(l => {
+        const parsed = parseMarkdown(l).trim();
+        return parsed ? `• ${parsed}<br>` : '';
+    }).join('') : ''}</div></div>`).join('')}</div>` : '';
     const eduHTML = education.length > 0 ? `<div class="res-section"><div class="res-section-title">Education</div>${education.map(edu => `<div class="res-item"><div class="res-item-header"><div><div class="res-item-title">${edu.degree || 'Degree'}</div><div class="res-item-subtitle">${edu.school || 'Institution'}</div></div><div class="res-item-date">${edu.date || ''}</div></div></div>`).join('')}</div>` : '';
-    const projHTML = projects.length > 0 ? `<div class="res-section"><div class="res-section-title">Projects</div>${projects.map(proj => `<div class="res-item"><div class="res-item-header"><div class="res-item-title">${proj.title || 'Project'} ${proj.tech ? `<span style="font-weight:normal;font-size:0.9em;opacity:0.7">| ${proj.tech}</span>` : ''}</div></div><div class="res-list">${proj.description ? proj.description.split('\n').map(l => l.trim() ? `• ${l}<br>` : ``).join('') : ''}</div></div>`).join('')}</div>` : '';
+    const projHTML = projects.length > 0 ? `<div class="res-section"><div class="res-section-title">Projects</div>${projects.map(proj => `<div class="res-item"><div class="res-item-header"><div class="res-item-title">${proj.title || 'Project'} ${proj.tech ? `<span style="font-weight:normal;font-size:0.9em;opacity:0.7">| ${proj.tech}</span>` : ''}</div></div><div class="res-list">${proj.description ? proj.description.split('\n').map(l => {
+        const parsed = parseMarkdown(l).trim();
+        return parsed ? `• ${parsed}<br>` : '';
+    }).join('') : ''}</div></div>`).join('')}</div>` : '';
 
     let finalHTML = '';
     if (template === 'template-ats') {
@@ -101,7 +128,7 @@ function renderPreview() {
                 <div class="res-title">${personalInfo.title || 'Professional Title'}</div>
                 ${atsContactsHTML}
             </div>
-            ${summary ? `<div class="res-section"><div class="res-section-title">Professional Summary</div><div class="res-summary">${summary}</div></div>` : ''}
+            ${parsedSummary ? `<div class="res-section"><div class="res-section-title">Professional Summary</div><div class="res-summary">${parsedSummary}</div></div>` : ''}
             ${skills.length > 0 ? `<div class="res-section"><div class="res-section-title">Skills</div><p class="res-ats-skills-text">${skills.join(', ')}</p></div>` : ''}
             ${experience.length > 0 ? `<div class="res-section"><div class="res-section-title">Professional Experience</div>${experience.map(exp => `
                 <div class="res-item">
@@ -109,25 +136,31 @@ function renderPreview() {
                         <div class="res-item-title">${exp.title || 'Job Title'} | ${exp.company || 'Company'}</div>
                         <div class="res-item-date">${exp.date || ''}</div>
                     </div>
-                    <div class="res-list">${exp.description ? exp.description.split('\n').map(l => l.trim() ? `<div class="res-list-item">• ${l}</div>` : ``).join('') : ''}</div>
+                    <div class="res-list">${exp.description ? exp.description.split('\n').map(l => {
+                        const parsed = parseMarkdown(l).trim();
+                        return parsed ? `<div class="res-list-item">• ${parsed}</div>` : '';
+                    }).join('') : ''}</div>
                 </div>`).join('')}</div>` : ''}
             ${projects.length > 0 ? `<div class="res-section"><div class="res-section-title">Key Projects</div>${projects.map(proj => `
                 <div class="res-item">
                     <div class="res-item-header">
                         <div class="res-item-title">${proj.title || 'Project'} ${proj.tech ? `| ${proj.tech}` : ''}</div>
                     </div>
-                    <div class="res-list">${proj.description ? proj.description.split('\n').map(l => l.trim() ? `<div class="res-list-item">• ${l}</div>` : ``).join('') : ''}</div>
+                    <div class="res-list">${proj.description ? proj.description.split('\n').map(l => {
+                        const parsed = parseMarkdown(l).trim();
+                        return parsed ? `<div class="res-list-item">• ${parsed}</div>` : '';
+                    }).join('') : ''}</div>
                 </div>`).join('')}</div>` : ''}
             ${eduHTML}
         `;
     } else if (template === 'template-minimal') {
-        finalHTML = `<div class="res-layout"><div class="res-sidebar">${photoHTML}<div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div>${contactsHTML}${skillsHTML}${eduHTML}</div><div class="res-main">${summary ? `<div class="res-section" style="margin-top:0"><div class="res-section-title" style="margin-top:0">Profile</div><div class="res-summary">${summary}</div></div>` : ''} ${expHTML}${projHTML}</div></div>`;
+        finalHTML = `<div class="res-layout"><div class="res-sidebar">${photoHTML}<div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div>${contactsHTML}${skillsHTML}${eduHTML}</div><div class="res-main">${parsedSummary ? `<div class="res-section" style="margin-top:0"><div class="res-section-title" style="margin-top:0">Profile</div><div class="res-summary">${parsedSummary}</div></div>` : ''} ${expHTML}${projHTML}</div></div>`;
     } else if (template === 'template-creative') {
-        finalHTML = `<div class="res-header">${photoHTML}<div class="res-header-content"><div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div>${contactsHTML}</div></div>${summary ? `<div class="res-section"><div class="res-section-title">Summary</div><div class="res-summary">${summary}</div></div>` : ''} ${expHTML}${projHTML}${eduHTML}${skillsHTML}`;
+        finalHTML = `<div class="res-header">${photoHTML}<div class="res-header-content"><div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div>${contactsHTML}</div></div>${parsedSummary ? `<div class="res-section"><div class="res-section-title">Summary</div><div class="res-summary">${parsedSummary}</div></div>` : ''} ${expHTML}${projHTML}${eduHTML}${skillsHTML}`;
     } else if (template === 'template-corporate') {
-        finalHTML = `<div class="res-header"><div class="res-header-left"><div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div></div>${contactsHTML}</div>${summary ? `<div class="res-section"><div class="res-section-title">Professional Profile</div><div class="res-summary">${summary}</div></div>` : ''} ${expHTML}${projHTML}${eduHTML}${skillsHTML}`;
+        finalHTML = `<div class="res-header"><div class="res-header-left"><div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div></div>${contactsHTML}</div>${parsedSummary ? `<div class="res-section"><div class="res-section-title">Professional Profile</div><div class="res-summary">${parsedSummary}</div></div>` : ''} ${expHTML}${projHTML}${eduHTML}${skillsHTML}`;
     } else {
-        finalHTML = `<div class="res-header">${photoHTML}<div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div>${contactsHTML}</div>${summary ? `<div class="res-section"><div class="res-section-title">Summary</div><div class="res-summary">${summary}</div></div>` : ''} ${expHTML}${projHTML}${eduHTML}${skillsHTML}`;
+        finalHTML = `<div class="res-header">${photoHTML}<div class="res-name">${personalInfo.name || 'Your Name'}</div><div class="res-title">${personalInfo.title || 'Professional Title'}</div>${contactsHTML}</div>${parsedSummary ? `<div class="res-section"><div class="res-section-title">Summary</div><div class="res-summary">${parsedSummary}</div></div>` : ''} ${expHTML}${projHTML}${eduHTML}${skillsHTML}`;
     }
 
     previewContainer.className = `resume-preview ${template}`;
@@ -185,8 +218,6 @@ function autoFitContent() {
     const wrapper = document.getElementById('res-content-wrapper');
     if (!preview || !wrapper) return;
 
-    // Compute A4 content height in px: 297mm minus top + bottom padding (0.5in each = 1in total)
-    // Use a temporary ruler element for accurate mm-to-px conversion
     let ruler = document.getElementById('_mm_ruler');
     if (!ruler) {
         ruler = document.createElement('div');
@@ -194,64 +225,481 @@ function autoFitContent() {
         ruler.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:297mm;height:1mm;pointer-events:none;visibility:hidden;';
         document.body.appendChild(ruler);
     }
-    const mmToPx = ruler.offsetWidth / 297; // px per mm
+    const mmToPx = ruler.offsetWidth / 297;
     const a4HeightPx = 297 * mmToPx;
-    const paddingPx = parseFloat(getComputedStyle(preview).paddingTop) + parseFloat(getComputedStyle(preview).paddingBottom);
+    const paddingPx = 25.4 * mmToPx; // 1in padding (0.5in top + 0.5in bottom)
     const contentMaxHeight = a4HeightPx - paddingPx;
 
-    // 1. Reset to defaults
-    preview.style.fontSize = '11pt';
+    // Reset styles on preview to measure uncompressed baseline height
+    preview.style.setProperty('--res-font-scale', '1.0');
+    preview.style.setProperty('--res-margin-scale', '1.0');
     preview.style.lineHeight = '1.4';
-    const sections = wrapper.querySelectorAll('.res-section');
-    sections.forEach(s => { s.style.marginBottom = '12px'; });
 
-    const isOverflowing = () => wrapper.scrollHeight > contentMaxHeight + 2;
+    // Detect overflow
+    const maxPagesLimit = state.maxPages || 1;
+    const isOverflowing = () => wrapper.scrollHeight > maxPagesLimit * contentMaxHeight + 2;
 
-    // 2. Step 1 — tighten section gaps
-    if (isOverflowing()) sections.forEach(s => { s.style.marginBottom = '10px'; });
-    if (isOverflowing()) sections.forEach(s => { s.style.marginBottom = '8px'; });
+    const warningCard = document.getElementById('overflow-warning-card');
+    const warningLimitNum = document.getElementById('warning-limit-num');
 
-    // 3. Step 2 — reduce line height
-    if (isOverflowing()) preview.style.lineHeight = '1.3';
-    if (isOverflowing()) preview.style.lineHeight = '1.2';
+    let finalOverflow = false;
 
-    // 4. Step 3 — shrink font size (11pt → 9.5pt min)
-    let currentSize = 11;
-    while (isOverflowing() && currentSize > 9.5) {
-        currentSize -= 0.2;
-        preview.style.fontSize = `${currentSize.toFixed(1)}pt`;
+    if (state.overflowStrategy === 'shrink') {
+        let fontScale = 1.0;
+        let marginScale = 1.0;
+        let lineHeight = 1.4;
+
+        // Tighten section gaps
+        if (isOverflowing()) {
+            marginScale = 0.8;
+            preview.style.setProperty('--res-margin-scale', marginScale.toFixed(2));
+        }
+        if (isOverflowing()) {
+            marginScale = 0.6;
+            preview.style.setProperty('--res-margin-scale', marginScale.toFixed(2));
+        }
+
+        // Reduce line height
+        if (isOverflowing()) {
+            lineHeight = 1.3;
+            preview.style.lineHeight = lineHeight;
+        }
+        if (isOverflowing()) {
+            lineHeight = 1.2;
+            preview.style.lineHeight = lineHeight;
+        }
+
+        // Shrink font size progressively
+        while (isOverflowing() && fontScale > state.minFontScale) {
+            fontScale -= 0.02;
+            preview.style.setProperty('--res-font-scale', fontScale.toFixed(3));
+        }
+
+        // Check if it STILL overflows after shrinking
+        finalOverflow = isOverflowing();
+
+        const originalHTML = wrapper.innerHTML;
+        const currentFontScale = preview.style.getPropertyValue('--res-font-scale') || '1.0';
+        const currentMarginScale = preview.style.getPropertyValue('--res-margin-scale') || '1.0';
+        const currentLineHeight = preview.style.lineHeight || '1.4';
+
+        preview.innerHTML = '';
+        
+        // Render in standard page shells
+        const numPages = Math.max(1, maxPagesLimit);
+        for (let i = 1; i <= numPages; i++) {
+            const page = document.createElement('div');
+            const templateClass = Array.from(preview.classList).find(c => c.startsWith('template-'));
+            page.className = `resume-page ${templateClass}`;
+            page.setAttribute('data-page', i);
+            
+            // Set styles directly on the page, so that PDF generator also picks them up
+            page.style.setProperty('--res-font-scale', currentFontScale);
+            page.style.setProperty('--res-margin-scale', currentMarginScale);
+            page.style.lineHeight = currentLineHeight;
+            
+            const content = document.createElement('div');
+            content.className = 'res-page-content';
+            
+            if (i === 1) {
+                content.innerHTML = originalHTML;
+            }
+            
+            // Toggle the warning card depending on whether the content fits in the chosen limit
+            if (finalOverflow) {
+                // If optional sections exist, suggest removal
+                if (state && (state.hobbies?.length || state.certifications?.length || state.extraActivities?.length)) {
+                    suggestOptionalSections();
+                }
+                if (warningCard) {
+                    warningCard.classList.remove('hidden');
+                    requestAnimationFrame(() => warningCard.classList.add('active'));
+                }
+                if (warningLimitNum) {
+                    warningLimitNum.textContent = maxPagesLimit;
+                }
+            } else {
+                if (warningCard) {
+                    warningCard.classList.remove('active');
+                    setTimeout(() => {
+                        if (!warningCard.classList.contains('active')) {
+                            warningCard.classList.add('hidden');
+                        }
+                    }, 300);
+                }
+            }
+            
+            page.appendChild(content);
+            preview.appendChild(page);
+        }
+    } else {
+        // Multi-page flow distribution path
+        distributeContent(preview, wrapper, contentMaxHeight);
+
+        // In flow mode, we overflow if the generated pages exceed user's chosen limit
+        const actualPages = preview.querySelectorAll('.resume-page').length;
+        finalOverflow = actualPages > maxPagesLimit;
     }
 
-    // 5. If still overflowing, show page divider; otherwise clear it
-    if (isOverflowing()) {
-        handleMultiPageOverflow(wrapper, contentMaxHeight);
-    } else {
-        const divider = document.getElementById('page-divider');
-        if (divider) divider.remove();
+    // Suggest removal of optional sections when overflow persists
+    function suggestOptionalSections() {
+        const optional = [];
+        if (state.hobbies && state.hobbies.length) optional.push('Hobbies');
+        if (state.certifications && state.certifications.length) optional.push('Certifications');
+        if (state.extraActivities && state.extraActivities.length) optional.push('Extra Activities');
+        if (optional.length === 0) return;
+        const msg = `Your resume exceeds the page limit. Consider removing optional sections: ${optional.join(', ')}.\nDo you want to remove them now?`;
+        if (confirm(msg)) {
+            if (state.hobbies) state.hobbies = [];
+            if (state.certifications) state.certifications = [];
+            if (state.extraActivities) state.extraActivities = [];
+            // Persist changes and re-render
+            try { localStorage.setItem('aiResumeManager_v1', JSON.stringify(appState)); } catch(e) {}
+            updateAndRender();
+        }
     }
 }
 
-function handleMultiPageOverflow(wrapper, maxHeight) {
-    // This is a simplified version. For a real production app, we'd split sections carefully.
-    // For now, we'll just allow overflow and let CSS handle the page breaks at section boundaries.
-    const preview = document.getElementById('resume-preview');
-    preview.style.overflow = 'visible';
-    preview.style.minHeight = 'auto';
+function distributeContent(previewContainer, sourceWrapper, maxContentHeight) {
+    const templateClass = Array.from(previewContainer.classList).find(c => c.startsWith('template-'));
+    
+    if (templateClass === 'template-minimal') {
+        distributeMinimalContent(previewContainer, sourceWrapper, maxContentHeight);
+    } else {
+        distributeSequentialContent(previewContainer, sourceWrapper, maxContentHeight, templateClass);
+    }
+}
 
-    // We can add a visual divider for Page 1 boundary
-    const divider = document.getElementById('page-divider');
-    if (divider) divider.remove();
+function distributeSequentialContent(previewContainer, sourceWrapper, maxContentHeight, templateClass) {
+    previewContainer.innerHTML = '';
 
-    const newDivider = document.createElement('div');
-    newDivider.id = 'page-divider';
-    newDivider.style.position = 'absolute';
-    newDivider.style.top = `${maxHeight + parseFloat(getComputedStyle(preview).paddingTop)}px`;
-    newDivider.style.left = '0';
-    newDivider.style.width = '100%';
-    newDivider.style.borderTop = '2px dashed #ff4444';
-    newDivider.style.zIndex = '10';
-    newDivider.innerHTML = '<span style="background:#ff4444;color:white;font-size:8pt;padding:2px 5px;position:absolute;top:-10px;right:10px;border-radius:3px;">PAGE 1 LIMIT</span>';
-    preview.appendChild(newDivider);
+    let currentPageNum = 1;
+    let currentPage = createNewPage(previewContainer, currentPageNum, templateClass);
+    let currentPageWrapper = currentPage.querySelector('.res-page-content');
+
+    const elements = Array.from(sourceWrapper.children);
+
+    for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        const clone = el.cloneNode(true);
+        currentPageWrapper.appendChild(clone);
+
+        if (currentPageWrapper.scrollHeight <= maxContentHeight + 1) {
+            continue;
+        }
+
+        currentPageWrapper.removeChild(clone);
+
+        if (el.classList.contains('res-section') && el.querySelector('.res-item')) {
+            const sectionTitleEl = el.querySelector('.res-section-title');
+            const items = Array.from(el.querySelectorAll('.res-item'));
+
+            const sectionShell = el.cloneNode(false);
+            if (sectionTitleEl) {
+                sectionShell.appendChild(sectionTitleEl.cloneNode(true));
+            }
+            currentPageWrapper.appendChild(sectionShell);
+
+            let addedAnyItem = false;
+            let itemIndex = 0;
+
+            for (; itemIndex < items.length; itemIndex++) {
+                const itemClone = items[itemIndex].cloneNode(true);
+                sectionShell.appendChild(itemClone);
+
+                if (currentPageWrapper.scrollHeight <= maxContentHeight + 1) {
+                    addedAnyItem = true;
+                } else {
+                    sectionShell.removeChild(itemClone);
+                    break;
+                }
+            }
+
+            if (!addedAnyItem) {
+                currentPageWrapper.removeChild(sectionShell);
+                
+                currentPageNum++;
+                currentPage = createNewPage(previewContainer, currentPageNum, templateClass);
+                currentPageWrapper = currentPage.querySelector('.res-page-content');
+                
+                i--;
+                continue;
+            }
+
+            if (itemIndex < items.length) {
+                const remainingSection = el.cloneNode(false);
+                for (let j = itemIndex; j < items.length; j++) {
+                    remainingSection.appendChild(items[j].cloneNode(true));
+                }
+                
+                elements.splice(i + 1, 0, remainingSection);
+                
+                currentPageNum++;
+                currentPage = createNewPage(previewContainer, currentPageNum, templateClass);
+                currentPageWrapper = currentPage.querySelector('.res-page-content');
+            }
+        } else if (el.classList.contains('res-section') && el.querySelector('.res-skill-tag')) {
+            const sectionTitleEl = el.querySelector('.res-section-title');
+            const tags = Array.from(el.querySelectorAll('.res-skill-tag'));
+            
+            const sectionShell = el.cloneNode(false);
+            if (sectionTitleEl) {
+                sectionShell.appendChild(sectionTitleEl.cloneNode(true));
+            }
+            
+            const tagsContainer = el.querySelector('.res-skills').cloneNode(false);
+            sectionShell.appendChild(tagsContainer);
+            currentPageWrapper.appendChild(sectionShell);
+            
+            let addedAnyTag = false;
+            let tagIndex = 0;
+            
+            for (; tagIndex < tags.length; tagIndex++) {
+                const tagClone = tags[tagIndex].cloneNode(true);
+                tagsContainer.appendChild(tagClone);
+                
+                if (currentPageWrapper.scrollHeight <= maxContentHeight + 1) {
+                    addedAnyTag = true;
+                } else {
+                    tagsContainer.removeChild(tagClone);
+                    break;
+                }
+            }
+            
+            if (!addedAnyTag) {
+                currentPageWrapper.removeChild(sectionShell);
+                currentPageNum++;
+                currentPage = createNewPage(previewContainer, currentPageNum, templateClass);
+                currentPageWrapper = currentPage.querySelector('.res-page-content');
+                i--;
+                continue;
+            }
+            
+            if (tagIndex < tags.length) {
+                const remainingSection = el.cloneNode(false);
+                if (sectionTitleEl) {
+                    remainingSection.appendChild(sectionTitleEl.cloneNode(true));
+                }
+                const remainingTagsContainer = el.querySelector('.res-skills').cloneNode(false);
+                for (let j = tagIndex; j < tags.length; j++) {
+                    remainingTagsContainer.appendChild(tags[j].cloneNode(true));
+                }
+                remainingSection.appendChild(remainingTagsContainer);
+                
+                elements.splice(i + 1, 0, remainingSection);
+                
+                currentPageNum++;
+                currentPage = createNewPage(previewContainer, currentPageNum, templateClass);
+                currentPageWrapper = currentPage.querySelector('.res-page-content');
+            }
+        } else {
+            currentPageNum++;
+            currentPage = createNewPage(previewContainer, currentPageNum, templateClass);
+            currentPageWrapper = currentPage.querySelector('.res-page-content');
+            currentPageWrapper.appendChild(clone);
+        }
+    }
+    
+    addContinuedSectionTitles(previewContainer);
+}
+
+function distributeMinimalContent(previewContainer, sourceWrapper, maxContentHeight) {
+    previewContainer.innerHTML = '';
+
+    const resLayout = sourceWrapper.querySelector('.res-layout');
+    if (!resLayout) return;
+
+    const sidebarSource = resLayout.querySelector('.res-sidebar');
+    const mainSource = resLayout.querySelector('.res-main');
+
+    const sidebarElements = sidebarSource ? Array.from(sidebarSource.children) : [];
+    const mainElements = mainSource ? Array.from(mainSource.children) : [];
+
+    let currentPageNum = 1;
+    
+    function createMinimalPage(pageNum) {
+        const page = document.createElement('div');
+        page.className = 'resume-page template-minimal';
+        page.setAttribute('data-page', pageNum);
+        
+        const layout = document.createElement('div');
+        layout.className = 'res-layout';
+        page.appendChild(layout);
+
+        const sidebar = document.createElement('div');
+        sidebar.className = 'res-sidebar';
+        layout.appendChild(sidebar);
+
+        const main = document.createElement('div');
+        main.className = 'res-main';
+        layout.appendChild(main);
+
+        previewContainer.appendChild(page);
+        return { page, sidebar, main };
+    }
+
+    let current = createMinimalPage(currentPageNum);
+
+    for (let i = 0; i < sidebarElements.length; i++) {
+        const el = sidebarElements[i];
+        const clone = el.cloneNode(true);
+        current.sidebar.appendChild(clone);
+
+        if (current.sidebar.scrollHeight > maxContentHeight + 1) {
+            current.sidebar.removeChild(clone);
+            currentPageNum++;
+            
+            let pages = previewContainer.querySelectorAll('.resume-page');
+            if (pages.length < currentPageNum) {
+                current = createMinimalPage(currentPageNum);
+            } else {
+                const targetPage = pages[currentPageNum - 1];
+                current = {
+                    page: targetPage,
+                    sidebar: targetPage.querySelector('.res-sidebar'),
+                    main: targetPage.querySelector('.res-main')
+                };
+            }
+            i--;
+        }
+    }
+
+    currentPageNum = 1;
+    let pages = previewContainer.querySelectorAll('.resume-page');
+    current = {
+        page: pages[0],
+        sidebar: pages[0].querySelector('.res-sidebar'),
+        main: pages[0].querySelector('.res-main')
+    };
+
+    for (let i = 0; i < mainElements.length; i++) {
+        const el = mainElements[i];
+        const clone = el.cloneNode(true);
+        current.main.appendChild(clone);
+
+        if (current.main.scrollHeight <= maxContentHeight + 1) {
+            continue;
+        }
+
+        current.main.removeChild(clone);
+
+        if (el.classList.contains('res-section') && el.querySelector('.res-item')) {
+            const sectionTitleEl = el.querySelector('.res-section-title');
+            const items = Array.from(el.querySelectorAll('.res-item'));
+
+            const sectionShell = el.cloneNode(false);
+            if (sectionTitleEl) sectionShell.appendChild(sectionTitleEl.cloneNode(true));
+            current.main.appendChild(sectionShell);
+
+            let addedAny = false;
+            let itemIndex = 0;
+
+            for (; itemIndex < items.length; itemIndex++) {
+                const itemClone = items[itemIndex].cloneNode(true);
+                sectionShell.appendChild(itemClone);
+
+                if (current.main.scrollHeight <= maxContentHeight + 1) {
+                    addedAny = true;
+                } else {
+                    sectionShell.removeChild(itemClone);
+                    break;
+                }
+            }
+
+            if (!addedAny) {
+                current.main.removeChild(sectionShell);
+                currentPageNum++;
+                pages = previewContainer.querySelectorAll('.resume-page');
+                if (pages.length < currentPageNum) {
+                    current = createMinimalPage(currentPageNum);
+                } else {
+                    const targetPage = pages[currentPageNum - 1];
+                    current = {
+                        page: targetPage,
+                        sidebar: targetPage.querySelector('.res-sidebar'),
+                        main: targetPage.querySelector('.res-main')
+                    };
+                }
+                i--;
+                continue;
+            }
+
+            if (itemIndex < items.length) {
+                const remainingSection = el.cloneNode(false);
+                for (let j = itemIndex; j < items.length; j++) {
+                    remainingSection.appendChild(items[j].cloneNode(true));
+                }
+                mainElements.splice(i + 1, 0, remainingSection);
+                
+                currentPageNum++;
+                pages = previewContainer.querySelectorAll('.resume-page');
+                if (pages.length < currentPageNum) {
+                    current = createMinimalPage(currentPageNum);
+                } else {
+                    const targetPage = pages[currentPageNum - 1];
+                    current = {
+                        page: targetPage,
+                        sidebar: targetPage.querySelector('.res-sidebar'),
+                        main: targetPage.querySelector('.res-main')
+                    };
+                }
+            }
+        } else {
+            currentPageNum++;
+            pages = previewContainer.querySelectorAll('.resume-page');
+            if (pages.length < currentPageNum) {
+                current = createMinimalPage(currentPageNum);
+            } else {
+                const targetPage = pages[currentPageNum - 1];
+                current = {
+                    page: targetPage,
+                    sidebar: targetPage.querySelector('.res-sidebar'),
+                    main: targetPage.querySelector('.res-main')
+                };
+            }
+            current.main.appendChild(clone);
+        }
+    }
+    
+    addContinuedSectionTitles(previewContainer);
+}
+
+function createNewPage(previewContainer, pageNum, templateClass) {
+    const page = document.createElement('div');
+    page.className = `resume-page ${templateClass}`;
+    page.setAttribute('data-page', pageNum);
+    
+    const content = document.createElement('div');
+    content.className = 'res-page-content';
+    page.appendChild(content);
+    
+    previewContainer.appendChild(page);
+    return page;
+}
+
+function addContinuedSectionTitles(previewContainer) {
+    const pages = Array.from(previewContainer.querySelectorAll('.resume-page'));
+    if (pages.length <= 1) return;
+
+    const seenTitles = new Set();
+
+    pages.forEach((page, pageIdx) => {
+        if (pageIdx === 0) {
+            page.querySelectorAll('.res-section-title').forEach(title => {
+                seenTitles.add(title.textContent.trim().toLowerCase());
+            });
+            return;
+        }
+
+        page.querySelectorAll('.res-section-title').forEach(title => {
+            const cleanText = title.textContent.trim().replace(/\s*\(continued\)$/i, '').trim().toLowerCase();
+            if (seenTitles.has(cleanText) && !title.innerHTML.includes('(Continued)')) {
+                title.innerHTML += ' <span style="font-size:0.8em; font-weight:normal; opacity:0.7;">(Continued)</span>';
+            } else {
+                seenTitles.add(cleanText);
+            }
+        });
+    });
 }
 
 function updateATSScore() {

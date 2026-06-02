@@ -221,21 +221,43 @@ window.showGrammarModal = function (resultText, targetElement, onApply) {
 function setupExport() {
     document.getElementById('download-pdf').addEventListener('click', () => {
         const element = document.getElementById('resume-preview');
+        const warningCard = document.getElementById('overflow-warning-card');
+        
+        // Save original preview styling
         const originalTransform = element.style.transform;
         const originalMarginBottom = element.style.marginBottom;
         const originalMarginRight = element.style.marginRight;
         const originalBoxShadow = element.style.boxShadow;
         const originalMinHeight = element.style.minHeight;
+        const originalHeight = element.style.height;
+        const originalOverflow = element.style.overflow;
+        const originalGap = element.style.gap;
 
+        // Hide warning card
+        let warningCardWasActive = false;
+        if (warningCard && warningCard.classList.contains('active')) {
+            warningCardWasActive = true;
+            warningCard.classList.remove('active');
+            warningCard.classList.add('hidden');
+        }
+
+        // Apply clean styles for PDF generation
         element.style.transform = 'none';
         element.style.marginBottom = '0';
         element.style.marginRight = '0';
         element.style.boxShadow = 'none';
-
-        // Ensure it doesn't bleed slightly past 297mm
         element.style.minHeight = 'auto';
-        element.style.height = '296mm';
-        element.style.overflow = 'hidden';
+        element.style.height = 'auto';
+        element.style.overflow = 'visible';
+        element.style.gap = '0';
+
+        // Disable visual page shadows for clean export
+        const pages = element.querySelectorAll('.resume-page');
+        const originalPageShadows = [];
+        pages.forEach(p => {
+            originalPageShadows.push(p.style.boxShadow);
+            p.style.boxShadow = 'none';
+        });
 
         const divider = document.getElementById('page-divider');
         if (divider) divider.style.display = 'none';
@@ -244,18 +266,32 @@ function setupExport() {
             margin: 0,
             filename: `${state.personalInfo.name || 'resume'}_v2.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'], before: '.resume-page' }
         };
+
         html2pdf().set(opt).from(element).save().then(() => {
+            // Restore styles
             element.style.transform = originalTransform;
             element.style.marginBottom = originalMarginBottom;
             element.style.marginRight = originalMarginRight;
             element.style.boxShadow = originalBoxShadow;
             element.style.minHeight = originalMinHeight;
-            element.style.height = '';
-            element.style.overflow = '';
+            element.style.height = originalHeight;
+            element.style.overflow = originalOverflow;
+            element.style.gap = originalGap;
+
+            pages.forEach((p, idx) => {
+                p.style.boxShadow = originalPageShadows[idx];
+            });
+
             if (divider) divider.style.display = 'block';
+
+            if (warningCardWasActive && warningCard) {
+                warningCard.classList.remove('hidden');
+                requestAnimationFrame(() => warningCard.classList.add('active'));
+            }
         });
     });
 

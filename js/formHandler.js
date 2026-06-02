@@ -11,6 +11,7 @@ function initFormHandlers() {
     setupSkills();
     populateFormFields();
     setupTargetControls();
+    setupPageSettings();
 }
 
 function showLoading(show) {
@@ -54,6 +55,10 @@ function populateFormFields() {
     if (state.targetRole) document.getElementById('target-role').value = state.targetRole;
     if (state.jobDescription) document.getElementById('job-description').value = state.jobDescription;
     if (p.photo) document.getElementById('remove-photo-btn').classList.remove('hidden');
+    
+    // Page settings
+    if (state.maxPages) document.getElementById('max-pages-selector').value = state.maxPages;
+    if (state.overflowStrategy) document.getElementById('overflow-strategy-selector').value = state.overflowStrategy;
 }
 
 function setupPersonalInputs() {
@@ -355,6 +360,47 @@ function setupTargetControls() {
         jdInput.addEventListener('input', (e) => {
             state.jobDescription = e.target.value;
             saveData();
+        });
+    }
+}
+
+function setupPageSettings() {
+    const maxPagesSel = document.getElementById('max-pages-selector');
+    const strategySel = document.getElementById('overflow-strategy-selector');
+
+    if (maxPagesSel) {
+        maxPagesSel.addEventListener('change', (e) => {
+            state.maxPages = parseInt(e.target.value);
+            updateAndRender();
+        });
+    }
+
+    if (strategySel) {
+        strategySel.addEventListener('change', (e) => {
+            state.overflowStrategy = e.target.value;
+            updateAndRender();
+        });
+    }
+    
+    // Also set up warnings buttons
+    const warningShrinkBtn = document.getElementById('warning-action-shrink');
+    const warningFlowBtn = document.getElementById('warning-action-flow');
+    
+    if (warningShrinkBtn) {
+        warningShrinkBtn.addEventListener('click', () => {
+            state.overflowStrategy = 'shrink';
+            if (strategySel) strategySel.value = 'shrink';
+            updateAndRender();
+        });
+    }
+    
+    if (warningFlowBtn) {
+        warningFlowBtn.addEventListener('click', () => {
+            state.maxPages = (state.maxPages || 1) + 1;
+            state.overflowStrategy = 'flow';
+            if (maxPagesSel) maxPagesSel.value = state.maxPages;
+            if (strategySel) strategySel.value = 'flow';
+            updateAndRender();
         });
     }
 }

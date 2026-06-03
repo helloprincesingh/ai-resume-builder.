@@ -2,13 +2,6 @@
   "version": 2,
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/api/gemini",
-      "dest": "/server.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

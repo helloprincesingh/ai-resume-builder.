@@ -1,4 +1,4 @@
-const API_URL = '/api/gemini';
+const API_URL = 'https://ai-resume-builder-q0rd.onrender.com/api/gemini';
 
 async function callGeminiAPI(prompt, temperature = 0.7) {
     try {
